@@ -155,12 +155,8 @@ class SetMapper {
       $node = $this->firstOrNew($this->getSearchAttributes($attributes));
 
       $data = $this->getDataAttributes($attributes);
-      if ( !is_null($parentKey) ){
-        $data[$node->getParentColumnName()] = $parentKey;
-      }
-        if ( is_null($parentKey) ){
-        $data[$node->getParentColumnName()] = NULL;
-      }
+      $data[$node->getParentColumnName()] = $parentKey;
+      
       $node->fill($data);
 
       $result = $node->save();
