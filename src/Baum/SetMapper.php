@@ -68,13 +68,12 @@ class SetMapper {
       $result = true;
 
       try {
-        $flattenTree = $this->flattenNestable($nodeList);
+        $flattenTree = $self->flattenNestable($nodeList);
 
-        foreach ($flattenTree as $branch) {
+        foreach ($flattenTree as $node) {
           $self->node->flushEventListeners();
-          $model = $self->node->find($branch['id']);
-          $model->fill($branch);
-          $model->save();
+          $model = $self->node->findOrFail(array_get($node, $self->node->getKeyName()));
+          $model->update($node);
         }
       } catch (\Exception $e) {
           $result = false;
@@ -89,40 +88,38 @@ class SetMapper {
   /**
    * Flattens an array to contain 'id', 'lft', 'rgt', 'depth', 'parent_id' as a valid tree
    * @param $nestableArray
-   * @param null $parent_id
+   * @param mixed $parent_id
    * @param int $depth
    * @param int $bound
    * @return array
    */
-  public function flattenNestable($nestableArray, $parent_id = null, $depth = 0, &$bound = 0)
+  public function flattenNestable($nodeList, $parent_id = null, $depth = 0, &$bound = 0)
   {
-    $return = array();
+    $nodes = array();
 
-    foreach ($nestableArray as $subArray) {
-      $returnSubSubArray = array();
-
+    foreach ($nodeList as $node) {
       $lft = ++$bound;
 
-      if (isset($subArray['children'])) {
-        $returnSubSubArray = $this->flattenNestable($subArray['children'], $subArray['id'], ($depth + 1), $bound);
-        $rgt = $bound + 1;
-        ++$bound;
-      } else {
-        $rgt = ++$bound;
+      $children = array_get($node, $this->childrenKeyName, []);
+
+      if (!empty($children)) {
+        $children = $this->flattenNestable($children, array_get($node, $this->node->getKeyName()), $depth + 1, $bound);
       }
 
-      $return[] = array(
-        $this->node->getKeyName() => $subArray['id'],
+      $rgt = ++$bound;
+
+      $nodes[] = array(
+        $this->node->getKeyName() => array_get($node, $this->node->getKeyName()),
         $this->node->getParentColumnName() => $parent_id,
         $this->node->getDepthColumnName() => $depth,
         $this->node->getLeftColumnName() => $lft,
         $this->node->getRightColumnName() => $rgt,
       );
 
-      $return = array_merge($return, $returnSubSubArray);
+      $nodes = array_merge($nodes, $children);
     }
 
-    return $return;
+    return $nodes;
   }
 
   /**
