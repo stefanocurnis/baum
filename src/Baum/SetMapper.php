@@ -64,9 +64,12 @@ class SetMapper {
 
     return $this->wrapInTransaction(function() use ($self, $nodeList) {
       forward_static_call(array(get_class($self->node), 'unguard'));
+
       $result = true;
+
       try {
         $flattenTree = $this->flattenNestable($nodeList);
+
         foreach ($flattenTree as $branch) {
           $self->node->flushEventListeners();
           $model = $self->node->find($branch['id']);
@@ -76,7 +79,9 @@ class SetMapper {
       } catch (\Exception $e) {
           $result = false;
       }
+
       forward_static_call(array(get_class($self->node), 'reguard'));
+
       return $result;
     });
   }
@@ -92,9 +97,12 @@ class SetMapper {
   public function flattenNestable($nestableArray, $parent_id = null, $depth = 0)
   {
     $return = array();
+
     foreach ($nestableArray as $subArray) {
       $returnSubSubArray = array();
+
       $lft = ++$this->bound;
+
       if (isset($subArray['children'])) {
         $returnSubSubArray = $this->flattenNestable($subArray['children'], $subArray['id'], ($depth + 1));
         $rgt = $this->bound + 1;
@@ -102,9 +110,18 @@ class SetMapper {
       } else {
         $rgt = ++$this->bound;
       }
-      $return[] = array('id' => $subArray['id'], 'parent_id' => $parent_id, 'depth' => $depth, 'lft' => $lft, 'rgt' => $rgt);
+
+      $return[] = array(
+        'id' => $subArray['id'],
+        'parent_id' => $parent_id,
+        'depth' => $depth,
+        'lft' => $lft,
+        'rgt' => $rgt
+      );
+      
       $return = array_merge($return, $returnSubSubArray);
     }
+
     return $return;
   }
 
