@@ -91,34 +91,34 @@ class SetMapper {
    * @param $nestableArray
    * @param null $parent_id
    * @param int $depth
+   * @param int $bound
    * @return array
    */
-  private $bound = 0;
-  public function flattenNestable($nestableArray, $parent_id = null, $depth = 0)
+  public function flattenNestable($nestableArray, $parent_id = null, $depth = 0, &$bound = 0)
   {
     $return = array();
 
     foreach ($nestableArray as $subArray) {
       $returnSubSubArray = array();
 
-      $lft = ++$this->bound;
+      $lft = ++$bound;
 
       if (isset($subArray['children'])) {
-        $returnSubSubArray = $this->flattenNestable($subArray['children'], $subArray['id'], ($depth + 1));
-        $rgt = $this->bound + 1;
-        ++$this->bound;
+        $returnSubSubArray = $this->flattenNestable($subArray['children'], $subArray['id'], ($depth + 1), $bound);
+        $rgt = $bound + 1;
+        ++$bound;
       } else {
-        $rgt = ++$this->bound;
+        $rgt = ++$bound;
       }
 
       $return[] = array(
-        'id' => $subArray['id'],
-        'parent_id' => $parent_id,
-        'depth' => $depth,
-        'lft' => $lft,
-        'rgt' => $rgt
+        $this->node->getKeyName() => $subArray['id'],
+        $this->node->getParentColumnName() => $parent_id,
+        $this->node->getDepthColumnName() => $depth,
+        $this->node->getLeftColumnName() => $lft,
+        $this->node->getRightColumnName() => $rgt,
       );
-      
+
       $return = array_merge($return, $returnSubSubArray);
     }
 
