@@ -1,3 +1,9 @@
+# Fork infos
+
+The makeTree() method on the original package doesn't keep parent and child sorting order when called. 
+This try to fix this problem (unfortunately with messy code, for now, but it works).
+
+
 # Baum
 
 [![Build Status](https://travis-ci.org/etrepat/baum.png?branch=master)](https://travis-ci.org/etrepat/baum)
